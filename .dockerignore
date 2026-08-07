@@ -1,0 +1,13 @@
+.git
+.gitignore
+venv
+logs
+cache
+downloads
+__pycache__
+*.pyc
+*.pyo
+.idea
+.vscode
+node_modules
+yt-dlp.exe

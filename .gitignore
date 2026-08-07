@@ -1,0 +1,22 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Runtime storage & Logs
+downloads/*
+!downloads/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Executables & Binaries
+yt-dlp.exe
+ffmpeg.exe
+ffprobe.exe
+
+# System & OS
+.DS_Store
+Thumbs.db
