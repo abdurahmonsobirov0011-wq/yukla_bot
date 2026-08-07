@@ -43,3 +43,23 @@ class UserRepository:
         result = await self.session.execute(select(User).where(User.telegram_id == telegram_id))
         return result.scalar_one_or_none()
 
+    async def get_all(self, limit: int = 50) -> list[User]:
+        result = await self.session.execute(
+            select(User).order_by(User.last_active_at.desc()).limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def set_banned(self, telegram_id: int, is_banned: bool, reason: str = "") -> None:
+        user = await self.get_by_telegram_id(telegram_id)
+        if user is None:
+            user = User(
+                telegram_id=telegram_id,
+                referral_code=secrets.token_urlsafe(8),
+                is_banned=is_banned,
+                ban_reason=reason,
+            )
+            self.session.add(user)
+        else:
+            user.is_banned = is_banned
+            user.ban_reason = reason if is_banned else ""
+        await self.session.commit()

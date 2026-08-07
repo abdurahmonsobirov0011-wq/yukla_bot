@@ -3,14 +3,27 @@ import fs from 'fs';
 import axios from 'axios';
 import env from '../../config/env.js';
 import logger from '../../config/logger.js';
-import { getYtDlpBinary, execFilePromise } from '../../utils/execHelper.js';
+import { getYtDlpBinary, getFfmpegBinary, execFilePromise } from '../../utils/execHelper.js';
 
 export async function downloadInstagram(url) {
   const timestamp = Date.now();
   const outputPath = path.join(env.DOWNLOAD_PATH, `ig_${timestamp}_%(id)s.%(ext)s`);
   const binary = getYtDlpBinary();
+  const ffmpegBin = getFfmpegBinary();
 
-  const args = ['--no-playlist', '--no-warnings', '-f', 'b/best', '-o', outputPath, url];
+  const args = [
+    '--no-playlist',
+    '--no-warnings',
+    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    '-f', 'b/best',
+    '-o', outputPath
+  ];
+
+  if (ffmpegBin) {
+    args.push('--ffmpeg-location', ffmpegBin);
+  }
+  args.push(url);
+
 
   logger.info(`Executing Instagram download via execFile: ${url}`);
   

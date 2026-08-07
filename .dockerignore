@@ -1,6 +1,11 @@
 .git
 .gitignore
+.env
+.env.*
+!.env.example
 venv
+.venv
+env
 logs
 cache
 downloads
@@ -11,3 +16,8 @@ __pycache__
 .vscode
 node_modules
 yt-dlp.exe
+ffmpeg.exe
+ffprobe.exe
+npm-debug.log
+.pytest_cache
+.ruff_cache

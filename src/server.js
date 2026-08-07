@@ -23,9 +23,10 @@ async function startServer() {
     logger.info('🤖 Telegram Bot polling started successfully.');
   }
 
-  const server = app.listen(env.PORT, () => {
-    logger.info(`🚀 Health-check server running on port ${env.PORT}`);
+  const server = app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`🚀 Health-check server running on 0.0.0.0:${env.PORT}`);
   });
+
 
   const gracefulShutdown = (signal) => {
     logger.info(`Received ${signal}. Initiating graceful shutdown...`);

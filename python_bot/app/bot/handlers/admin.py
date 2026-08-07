@@ -20,7 +20,7 @@ MAINTENANCE_MODE: bool = False
 
 
 def is_owner(user_id: int) -> bool:
-    return user_id in settings.admin_ids
+    return user_id in settings.effective_admin_ids
 
 
 @router.message(Command("admin"))

@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+import logging
 from typing import Any
 
 from aiogram import BaseMiddleware
@@ -6,6 +7,8 @@ from aiogram.types import Message, TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.users import UserRepository
+
+user_logger = logging.getLogger("users")
 
 
 class UserMiddleware(BaseMiddleware):
@@ -27,7 +30,7 @@ class UserMiddleware(BaseMiddleware):
                 language=from_user.language_code or "uz",
             )
             data["db_user"] = user
+            user_logger.info("User activity telegram_id=%s username=%s", from_user.id, from_user.username or "")
             if user.is_banned and message:
                 return await message.answer("⛔ Hisobingiz bloklangan.")
         return await handler(event, data)
-

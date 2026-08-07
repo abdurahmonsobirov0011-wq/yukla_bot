@@ -2,15 +2,19 @@ import mongoose from 'mongoose';
 import env from './env.js';
 import logger from './logger.js';
 
-export async function connectDB() {
-  if (!env.MONGODB_URI) {
-    logger.warn('⚠️ MONGODB_URI is empty. Database functions will be disabled in development mode.');
-    return null;
-  }
+export function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
 
+export async function connectDB() {
   // Disable command buffering so DB queries fail immediately instead of timing out
   mongoose.set('bufferCommands', false);
   mongoose.set('strictQuery', false);
+
+  if (!env.MONGODB_URI) {
+    logger.warn('⚠️ MONGODB_URI is empty. Running with local storage fallback.');
+    return null;
+  }
 
   const maxRetries = 3;
   const retryIntervalMs = 3000;
@@ -32,7 +36,7 @@ export async function connectDB() {
       });
 
       mongoose.connection.on('disconnected', () => {
-        logger.warn('⚠️ MongoDB connection lost. Attempting auto-reconnect...');
+        logger.warn('⚠️ MongoDB connection lost. Running with local storage fallback...');
       });
 
       return conn;
@@ -47,10 +51,11 @@ export async function connectDB() {
           logger.error('❌ FATAL: Could not connect to MongoDB after maximum retry attempts in production.');
           process.exit(1);
         } else {
-          logger.warn('⚠️ Development Mode: Running without MongoDB connection. Transient caching active.');
+          logger.warn('⚠️ Development Mode: Running without MongoDB connection. Transient & local storage fallback active.');
           return null;
         }
       }
     }
   }
 }
+

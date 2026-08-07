@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import { isDbConnected } from '../../config/database.js';
+import localStore from '../../utils/localStore.js';
 import Blacklist from '../../models/Blacklist.js';
 import logger from '../../config/logger.js';
 
@@ -12,8 +13,12 @@ export async function blacklistMiddleware(ctx, next) {
     return ctx.reply('⛔ *Hisobingiz bloklangan.*\n\nBotdan foydalanish huquqingiz cheklangan.', { parse_mode: 'Markdown' });
   }
 
-  // Skip DB query if Mongoose is not in connected state
-  if (mongoose.connection.readyState !== 1) {
+  // Fallback to local store if DB is disconnected
+  if (!isDbConnected()) {
+    if (localStore.isBlacklisted(telegramId)) {
+      logger.warn(`Blacklisted ID ${telegramId} blocked via localStore.`);
+      return ctx.reply('⛔ *Kirish taqiqlangan.*\n\nTelegram ID ingiz qora ro\'yxatga kiritilgan.', { parse_mode: 'Markdown' });
+    }
     return next();
   }
 
@@ -25,8 +30,8 @@ export async function blacklistMiddleware(ctx, next) {
     }
   } catch (error) {
     logger.error(`Blacklist Middleware DB error: ${error.message}`);
-    // Non-blocking: continue message flow if DB check fails
   }
 
   return next();
 }
+

@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import { isDbConnected } from '../../config/database.js';
+import localStore from '../../utils/localStore.js';
 import User from '../../models/User.js';
 import { generateRandomString } from '../../utils/formatter.js';
 import logger from '../../config/logger.js';
@@ -14,22 +15,30 @@ export async function userMiddleware(ctx, next) {
   // Track active user ID
   activeUsersMemorySet.add(telegramId);
 
-  // Set default transient user state in case DB is disconnected or fails
-  ctx.state.user = {
-    telegramId,
-    username: username || '',
-    firstName: firstName || '',
-    lastName: lastName || '',
-    isPremium: false,
-    isBanned: false,
-    referralCode: generateRandomString(8)
-  };
-
-  // Skip DB query if Mongoose is not in connected state
-  if (mongoose.connection.readyState !== 1) {
+  // Fallback / Local Store check
+  if (!isDbConnected()) {
+    let localUser = localStore.getUser(telegramId);
+    if (!localUser) {
+      localUser = localStore.saveUser(telegramId, {
+        username: username || '',
+        firstName: firstName || '',
+        lastName: lastName || '',
+        languageCode: languageCode || 'uz',
+        isPremium: false,
+        isBanned: false,
+        referralCode: generateRandomString(8)
+      });
+    } else {
+      localUser.username = username || localUser.username;
+      localUser.firstName = firstName || localUser.firstName;
+      localUser.lastName = lastName || localUser.lastName;
+      localStore.saveUser(telegramId, localUser);
+    }
+    ctx.state.user = localUser;
     return next();
   }
 
+  // Mongoose DB Path
   try {
     let user = await User.findOne({ telegramId });
 
@@ -78,3 +87,4 @@ export async function userMiddleware(ctx, next) {
 
   return next();
 }
+

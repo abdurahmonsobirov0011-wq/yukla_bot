@@ -1,13 +1,13 @@
 import logging
 import secrets
 import time
-from pathlib import Path
 
 from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards.inline import quality_menu
+from app.config import settings
 from app.models import Download
 from app.repositories.downloads import DownloadRepository
 from app.services.downloaders.ytdlp import YtDlpDownloader
@@ -16,6 +16,7 @@ from app.services.search import SearchService
 from app.utils.platforms import detect_platform, extract_url
 
 logger = logging.getLogger(__name__)
+download_logger = logging.getLogger("downloads")
 router = Router(name="media")
 URL_CACHE: dict[str, str] = {}
 CANCELLED: set[str] = set()
@@ -69,6 +70,13 @@ async def download_callback(callback: CallbackQuery, session: AsyncSession) -> N
     try:
         await status.edit_text("🟦⬛⬛⬛⬛ 20%: manbadan olinmoqda")
         result = await YtDlpDownloader().download(url, quality=quality, media_type=media_type)
+        download_logger.info(
+            "Download completed user=%s url=%s type=%s quality=%s",
+            callback.from_user.id,
+            url,
+            media_type,
+            quality,
+        )
         if key in CANCELLED:
             CANCELLED.remove(key)
             return await status.edit_text("❌ Bekor qilindi")
@@ -128,7 +136,7 @@ async def recognize_handler(message: Message, bot: Bot) -> None:
     media = message.voice or message.audio or message.video
     status = await message.answer("🎧 Shazam aniqlayapti...")
     file = await bot.get_file(media.file_id)
-    local_path = Path("downloads") / f"recognize_{message.from_user.id}_{media.file_unique_id}.bin"
+    local_path = settings.download_dir / f"recognize_{message.from_user.id}_{media.file_unique_id}.bin"
     await bot.download_file(file.file_path, destination=local_path)
     try:
         song = await MusicRecognitionService().recognize(local_path)
@@ -142,4 +150,3 @@ async def recognize_handler(message: Message, bot: Bot) -> None:
         await status.edit_text(f"❌ Qo‘shiq aniqlanmadi: {exc}")
     finally:
         local_path.unlink(missing_ok=True)
-

@@ -11,6 +11,18 @@ export function getYtDlpBinary() {
   return 'yt-dlp';
 }
 
+export function getFfmpegBinary() {
+  const localExe = path.resolve('ffmpeg.exe');
+  if (fs.existsSync(localExe)) {
+    return localExe;
+  }
+  const staticExe = path.resolve('node_modules/ffmpeg-static/ffmpeg.exe');
+  if (fs.existsSync(staticExe)) {
+    return staticExe;
+  }
+  return 'ffmpeg';
+}
+
 export function execFilePromise(file, args, options = {}) {
   return new Promise((resolve, reject) => {
     const timeout = options.timeout || 60000;
@@ -27,15 +39,21 @@ export function execFilePromise(file, args, options = {}) {
 
 export async function probeMediaInfo(url) {
   const binary = getYtDlpBinary();
+  const ffmpegBin = getFfmpegBinary();
   try {
-    const { stdout } = await execFilePromise(binary, [
+    const args = [
       '--no-playlist',
       '--dump-json',
       '--no-warnings',
-      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      '--extractor-args', 'youtube:player_client=android,web',
-      url
-    ], { timeout: 20000 });
+      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      '--extractor-args', 'youtube:player_client=android,web'
+    ];
+    if (ffmpegBin) {
+      args.push('--ffmpeg-location', ffmpegBin);
+    }
+    args.push(url);
+
+    const { stdout } = await execFilePromise(binary, args, { timeout: 20000 });
 
     const meta = JSON.parse(stdout);
     const filesizeBytes = meta.filesize || meta.filesize_approx || 0;
@@ -66,9 +84,11 @@ export function checkSystemBinaries() {
   }
 
   try {
-    const ffmpegVer = execSync('ffmpeg -version', { encoding: 'utf8', timeout: 5000 }).split('\n')[0];
-    logger.info(`✅ FFmpeg detected (${ffmpegVer})`);
+    const ffmpegBin = getFfmpegBinary();
+    const ffmpegVer = execSync(`"${ffmpegBin}" -version`, { encoding: 'utf8', timeout: 5000 }).split('\n')[0];
+    logger.info(`✅ FFmpeg detected (${ffmpegVer}) at: ${ffmpegBin}`);
   } catch (err) {
-    logger.warn("⚠️ ffmpeg PATH'da topilmadi — audio konvertatsiya va MP3 ajratish ishlamasligi mumkin.");
+    logger.warn("⚠️ ffmpeg PATH'da ham, lokal papkada ham topilmadi.");
   }
 }
+

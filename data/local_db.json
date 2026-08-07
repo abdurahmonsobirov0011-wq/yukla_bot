@@ -1,0 +1,20 @@
+{
+  "users": {
+    "5375935317": {
+      "telegramId": 5375935317,
+      "username": "SAK_715",
+      "firstName": "Sobirov_.a",
+      "lastName": "",
+      "languageCode": "uz",
+      "isPremium": false,
+      "isBanned": false,
+      "referralCode": "mgQFcHVP",
+      "lastActive": "2026-08-07T15:42:08.431Z"
+    }
+  },
+  "blacklists": [],
+  "stats": {
+    "totalDownloads": 0,
+    "downloadsToday": 0
+  }
+}
