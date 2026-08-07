@@ -50,18 +50,7 @@ export async function recognizeMusicDetailed(audioFilePath) {
   }
 
   if (!songInfo) {
-    songInfo = {
-      artist: 'Mashhur',
-      title: 'Qo\'shiq',
-      album: 'Single',
-      releaseDate: '2026',
-      genre: 'General',
-      confidenceScore: '85%',
-      spotifyUrl: '',
-      appleMusicUrl: '',
-      lyrics: null,
-      fullQuery: 'popular trending audio song'
-    };
+    throw new Error("Musiqa aniqlanmadi. Iltimos, audio lavhani qaytadan yuboring.");
   }
 
   // Search & Download MP3

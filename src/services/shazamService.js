@@ -37,9 +37,9 @@ export async function recognizeAndDownloadMusic(audioFilePath) {
     logger.warn(`Shazam API recognition error: ${err.message}`);
   }
 
-  // Fallback query if Shazam recognition API did not return result
+  // If Shazam recognition API did not return result
   if (!songQuery) {
-    songQuery = 'popular trending song';
+    throw new Error("Qo'shiq tanilmadi. Iltimos, musiqaning sifatliroq va aniqroq qismini yuboring.");
   }
 
   logger.info(`Downloading full MP3 track for: "${songQuery}"...`);

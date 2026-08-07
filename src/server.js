@@ -16,11 +16,11 @@ async function startServer() {
 
   const bot = createBot();
   if (bot) {
-    bot.launch({ dropPendingUpdates: true }).then(() => {
-      logger.info('🤖 Telegram Bot polling started successfully.');
-    }).catch(err => {
+    logger.info('🤖 Launching Telegram Bot polling...');
+    bot.launch({ dropPendingUpdates: true }).catch(err => {
       logger.error(`Failed to launch Telegram Bot polling: ${err.message}`);
     });
+    logger.info('🤖 Telegram Bot polling started successfully.');
   }
 
   const server = app.listen(env.PORT, () => {

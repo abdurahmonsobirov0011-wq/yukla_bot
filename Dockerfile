@@ -1,34 +1,26 @@
-FROM python:3.12-slim
+FROM node:20-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8000
+ENV NODE_ENV=production \
+    PORT=3000
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
-    git \
-    build-essential \
-    libmagic-dev \
+    python3 \
     ca-certificates \
+  && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
+  && chmod a+rx /usr/local/bin/yt-dlp \
   && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -m -u 1000 appuser && \
-    mkdir -p /app/downloads /app/cache /app/logs /tmp && \
-    chown -R appuser:appuser /app /tmp
-
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm ci --only=production
 
 COPY . .
 
-RUN chown -R appuser:appuser /app
+RUN mkdir -p downloads logs
 
-USER appuser
+EXPOSE 3000
 
-EXPOSE 8000
-
-CMD ["python", "main.py"]
+CMD ["npm", "start"]
