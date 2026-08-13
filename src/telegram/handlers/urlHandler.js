@@ -127,7 +127,28 @@ export async function handleUrlMessage(ctx) {
       requestedFormat: 'video'
     });
 
-    if (downloadResult.mediaType === 'audio') {
+    if (downloadResult.isWebDownload) {
+      const sizeMb = (downloadResult.fileSize / (1024 * 1024)).toFixed(1);
+      const webKeyboard = [
+        [
+          { text: "⚡ Bevosita Yuklab Olish (Direct Link)", url: downloadResult.webUrl }
+        ],
+        [
+          { text: "➕ Guruhda ishlatish", url: `https://t.me/${botUsername}?startgroup=true` }
+        ],
+        [
+          { text: "❌ O'chirish", callback_data: "delete_msg" }
+        ]
+      ];
+
+      sentMsg = await ctx.reply(
+        `📦 *Fayl hajmi:* ${sizeMb} MB (Telegram API 50MB limitidan yuqori)\n\n` +
+        `📥 *Telegram cheklovi sababli to'g'ridan-to'g'ri yuklab olish havolasi yaratildi:*\n` +
+        `🔗 [Faylni yuklab olish uchun bosing](${downloadResult.webUrl})\n\n` +
+        `🤖 *@${botUsername}*`,
+        { parse_mode: 'Markdown', reply_markup: { inline_keyboard: webKeyboard } }
+      );
+    } else if (downloadResult.mediaType === 'audio') {
       sentMsg = await ctx.replyWithAudio(
         { source: downloadResult.filePath, filename: downloadResult.fileName },
         { caption, parse_mode: 'Markdown', reply_markup: { inline_keyboard } }
@@ -170,8 +191,9 @@ export async function handleUrlMessage(ctx) {
       { parse_mode: 'Markdown' }
     ).catch(() => {});
   } finally {
-    if (downloadResult && downloadResult.filePath) {
+    if (downloadResult && downloadResult.filePath && !downloadResult.isWebDownload) {
       deleteFile(downloadResult.filePath);
     }
   }
 }
+

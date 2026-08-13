@@ -87,11 +87,14 @@ export async function processDownload({ telegramId, url, requestedFormat = 'vide
     const maxMb = env.MAX_FILE_SIZE || 50;
     const maxBytes = maxMb * 1024 * 1024;
     if (downloadResult.fileSize > maxBytes) {
-      if (fs.existsSync(downloadResult.filePath)) {
-        fs.unlinkSync(downloadResult.filePath);
-      }
-      throw new Error(`Fayl hajmi juda katta (limit: ${maxMb}MB), pastroq sifatda urinib ko'ring.`);
+      const rawDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_URL || '';
+      const domain = rawDomain ? rawDomain.replace(/^https?:\/\//, '') : `localhost:${env.PORT}`;
+      const protocol = domain.includes('localhost') ? 'http' : 'https';
+      downloadResult.isWebDownload = true;
+      downloadResult.webUrl = `${protocol}://${domain}/downloads/${downloadResult.fileName}`;
+      logger.info(`File size (${(downloadResult.fileSize / 1024 / 1024).toFixed(1)}MB) > ${maxMb}MB. Created web download link: ${downloadResult.webUrl}`);
     }
+
 
     if (mongoose.connection.readyState === 1) {
       await Promise.all([
