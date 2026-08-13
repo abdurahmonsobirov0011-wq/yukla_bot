@@ -1,6 +1,7 @@
-import { execFile, execSync } from 'child_process';
+import { execFile, execSync, execFileSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import ffmpegStatic from 'ffmpeg-static';
 import logger from '../config/logger.js';
 
 export function getYtDlpBinary() {
@@ -16,12 +17,12 @@ export function getFfmpegBinary() {
   if (fs.existsSync(localExe)) {
     return localExe;
   }
-  const staticExe = path.resolve('node_modules/ffmpeg-static/ffmpeg.exe');
-  if (fs.existsSync(staticExe)) {
-    return staticExe;
+  if (ffmpegStatic && fs.existsSync(ffmpegStatic)) {
+    return ffmpegStatic;
   }
   return 'ffmpeg';
 }
+
 
 export function execFilePromise(file, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -77,7 +78,7 @@ export function checkSystemBinaries() {
 
   try {
     const binary = getYtDlpBinary();
-    const version = execSync(`"${binary}" --version`, { encoding: 'utf8', timeout: 5000 }).trim();
+    const version = execFileSync(binary, ['--version'], { encoding: 'utf8', timeout: 5000 }).trim();
     logger.info(`✅ yt-dlp detected (Version: ${version})`);
   } catch (err) {
     logger.warn('⚠️ yt-dlp binary was not found on PATH or local folder!');
@@ -85,10 +86,9 @@ export function checkSystemBinaries() {
 
   try {
     const ffmpegBin = getFfmpegBinary();
-    const ffmpegVer = execSync(`"${ffmpegBin}" -version`, { encoding: 'utf8', timeout: 5000 }).split('\n')[0];
+    const ffmpegVer = execFileSync(ffmpegBin, ['-version'], { encoding: 'utf8', timeout: 5000 }).split('\n')[0];
     logger.info(`✅ FFmpeg detected (${ffmpegVer}) at: ${ffmpegBin}`);
   } catch (err) {
-    logger.warn("⚠️ ffmpeg PATH'da ham, lokal papkada ham topilmadi.");
+    logger.warn(`⚠️ ffmpeg check failed: ${err.message}`);
   }
 }
-
