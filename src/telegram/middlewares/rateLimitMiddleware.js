@@ -8,7 +8,8 @@ export async function rateLimitMiddleware(ctx, next) {
 
   const telegramId = ctx.from.id;
   const isPremium = ctx.state?.user?.isPremium || false;
-  const minInterval = isPremium ? 1000 : 3000; // ms
+  const minInterval = isPremium ? 500 : 1000; // ms
+
 
   const now = Date.now();
   const lastTime = userRequestTimestamps.get(telegramId) || 0;
